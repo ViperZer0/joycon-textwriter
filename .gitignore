@@ -19,5 +19,10 @@ Cargo.lock
 
 # End of https://www.toptal.com/developers/gitignore/api/rust
 
+# Ignore database
+data.db
+# Ignore environment file
+.env
+
 # Ignore vim tags
 tags
