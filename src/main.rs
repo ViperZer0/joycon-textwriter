@@ -16,20 +16,26 @@ fn establish_connection() -> SqliteConnection {
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
-fn create_joycon_data_entry(conn: &mut SqliteConnection, symbol: &str, training_num: i32) -> JoyconData {
+fn create_joycon_data_entry(conn: &mut SqliteConnection, symbol: &str, training_num: i32) {
     use crate::schema::joycon_data;
     let new_entry = NewJoyconData::new(symbol, training_num);
 
     diesel::insert_into(joycon_data::table)
         .values(&new_entry)
+        .execute(conn);
+        /*
         .get_result(conn)
         .expect("Error adding new data!")
+        */
 }
 
 fn main() {
     use self::schema::joycon_data::dsl::*;
 
     let connection = &mut establish_connection();
+
+    create_joycon_data_entry(connection, "Test", 1);
+
     let results = joycon_data
         .limit(5)
         .load::<models::JoyconData>(connection)
