@@ -2,7 +2,7 @@ use diesel::prelude::*;
 use diesel::query_builder::{DeleteStatement, IncompleteInsertStatement};
 use dotenvy::dotenv;
 use std::env;
-use self::models::JoyconData;
+use self::models::{JoyconData, JoyconDataSet};
 
 pub mod models;
 pub mod schema;
@@ -43,4 +43,14 @@ impl OpenDatabaseConnection{
             .execute(&mut self.conn)
     }
 
+    // adds an entire data set to the database.
+    pub fn create_new_joycon_dataset(&mut self, entry: &JoyconDataSet) -> QueryResult<usize>
+    {
+        let dataset: Vec<JoyconData> = entry.into();
+        use self::schema::joycon_data;
+        diesel::insert_into(joycon_data::table)
+                .values(dataset)
+                .execute(&mut self.conn)
+    }
 }
+

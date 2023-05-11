@@ -8,6 +8,7 @@ use crate::schema::joycon_data;
 pub struct JoyconData {
     pub symbol: String,
     pub training_num: i32,
+    pub sample_num: i32,
     pub time: Option<f32>,
     pub gyro_x: Option<f32>,
     pub gyro_y: Option<f32>,
@@ -29,11 +30,12 @@ pub struct JoyconDataPoint {
 
 impl JoyconDataPoint
 {
-    fn label(&self, symbol: &str, training_num: i32) -> JoyconData 
+    fn label(&self, symbol: &str, training_num: i32, sample_num: i32) -> JoyconData 
     {
         JoyconData {
             symbol: symbol.to_owned(),
             training_num: training_num,
+            sample_num: sample_num,
             time: self.time,
             gyro_x: self.gyro_x,
             gyro_y: self.gyro_y,
@@ -51,11 +53,14 @@ pub struct JoyconDataSet {
     pub data_points: Vec<JoyconDataPoint>,
 }
 
-impl From<JoyconDataSet> for Vec<JoyconData>
+impl From<&JoyconDataSet> for Vec<JoyconData>
 {
-    fn from(item: JoyconDataSet) -> Self
+    fn from(item: &JoyconDataSet) -> Self
     {
-        item.data_points.iter().map(|x| x.label(&item.symbol, item.training_num)).collect()
+        let mut index = -1;
+        // maybe we want to sort this?
+        // Add an incrementing index.
+        item.data_points.iter().map(|x| { index += 1; x.label(&item.symbol, item.training_num, index)}).collect()
     }
 }
 /*
