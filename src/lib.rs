@@ -54,3 +54,7 @@ impl OpenDatabaseConnection{
     }
 }
 
+pub struct JoyconRecorder
+{
+}
+
