@@ -1,11 +1,15 @@
 use diesel::prelude::*;
-use diesel::query_builder::{DeleteStatement, IncompleteInsertStatement};
+//use diesel::query_builder::{DeleteStatement, IncompleteInsertStatement};
 use dotenvy::dotenv;
 use std::env;
-use self::models::{JoyconData, JoyconDataSet};
+use self::models::{JoyconData};
+use self::joycon_data_set::{JoyconDataSet};
 
 pub mod models;
 pub mod schema;
+pub mod joycon_data_set;
+pub mod fraction;
+pub mod average;
 
 pub struct DatabaseConnection { }
 
@@ -54,7 +58,28 @@ impl OpenDatabaseConnection{
     }
 }
 
+/*
 pub struct JoyconRecorder
 {
 }
 
+impl JoyconRecorder
+{
+    pub async fn record_dataset(symbol: &str, training_num: i32) -> JoyconDataSet
+    {
+        let manager = JoyconManager::get_instance();
+
+        let devices = {
+            let lock = manager.lock();
+            match lock {
+                Ok(manager) => manager.new_devices();
+                Err(_) => unreachable!();
+            }
+        };
+
+        let mut data_points: Vec<JoyconDataPoint> = vec!();
+        
+
+        todo!();
+    }
+*/

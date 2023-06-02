@@ -27,6 +27,7 @@ fn main() {
     let testResult = JoyconData {
         symbol: String::from("A"),
         training_num: 1,
+        sample_num: 1,
         time: None,
         gyro_x: None,
         gyro_y: None,

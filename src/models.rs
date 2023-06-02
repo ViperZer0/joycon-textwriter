@@ -18,51 +18,7 @@ pub struct JoyconData {
     pub accel_z: Option<f32>,
 }
 
-pub struct JoyconDataPoint {
-    pub time: Option<f32>,
-    pub gyro_x: Option<f32>,
-    pub gyro_y: Option<f32>,
-    pub gyro_z: Option<f32>,
-    pub accel_x: Option<f32>,
-    pub accel_y: Option<f32>,
-    pub accel_z: Option<f32>,
-}
 
-impl JoyconDataPoint
-{
-    fn label(&self, symbol: &str, training_num: i32, sample_num: i32) -> JoyconData 
-    {
-        JoyconData {
-            symbol: symbol.to_owned(),
-            training_num: training_num,
-            sample_num: sample_num,
-            time: self.time,
-            gyro_x: self.gyro_x,
-            gyro_y: self.gyro_y,
-            gyro_z: self.gyro_z,
-            accel_x: self.accel_x,
-            accel_y: self.accel_y,
-            accel_z: self.accel_z,
-        }
-    }
-}
-
-pub struct JoyconDataSet {
-    pub symbol: String,
-    pub training_num: i32,
-    pub data_points: Vec<JoyconDataPoint>,
-}
-
-impl From<&JoyconDataSet> for Vec<JoyconData>
-{
-    fn from(item: &JoyconDataSet) -> Self
-    {
-        let mut index = -1;
-        // maybe we want to sort this?
-        // Add an incrementing index.
-        item.data_points.iter().map(|x| { index += 1; x.label(&item.symbol, item.training_num, index)}).collect()
-    }
-}
 /*
 use crate::schema::joycon_data;
 #[derive(Insertable)]
