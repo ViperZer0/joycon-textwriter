@@ -2,7 +2,6 @@ use crate::fraction::Fraction;
 use crate::models::JoyconData;
 use crate::average::Average;
 use std::default::Default;
-
 #[derive(Default)]
 pub struct JoyconDataPoint {
     pub time: Option<f32>,
