@@ -132,33 +132,6 @@ impl From<&JoyconDataSet> for Vec<JoyconData>
 
 impl JoyconDataSet
 {
-    //TODO: this can probably actually be super generic for testing
-    pub fn resample(self: &mut Self, num_samples: usize) -> &Self
-    {
-        if self.data_points.len() <= num_samples
-        {
-            return self;
-        }
-        else
-        {
-            let ratio = Self::ratio(self.data_points.len(), num_samples);
-            // The size of a window to get the average of is 1 + the difference between the
-            // numerator and the denominator. A ratio of 7:5 takes the average of 3 elements.
-            let size = 1 + ratio.numerator - ratio.denom;
-            self.data_points = self.data_points.windows(size).map(|x| JoyconDataPoint::average(&x)).collect();
-            return self;
-        } 
-    }
-
-    fn ratio(size_1: usize, size_2: usize) -> Fraction<usize>
-    {
-        let mut f = Fraction {
-            numerator: size_1,
-            denom: size_2,
-        };
-        f.reduce_mut();
-        return f;
-    }
 }
 
 #[cfg(test)]
