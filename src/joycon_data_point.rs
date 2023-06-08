@@ -78,26 +78,19 @@ impl JoyconDataPoint
     }
 }
 
-trait AxisToJoyconDataPoint
-{
-    fn into(&self, time_elapsed: f32) -> JoyconDataPoint;
-}
 
-impl AxisToJoyconDataPoint for AxisData
+// A special converter that takes an extra argument
+pub fn axisdata_to_joycon_data_point(item: &AxisData, time_elapsed: f32) -> JoyconDataPoint
 {
-    // A special converter that takes an extra argument
-    fn into(&self, time_elapsed: f32) -> JoyconDataPoint
+    JoyconDataPoint
     {
-        JoyconDataPoint
-        {
-            time: Some(time_elapsed),
-            gyro_x: Some(self.gyro_1.into()),
-            gyro_y: Some(self.gyro_2.into()),
-            gyro_z: Some(self.gyro_3.into()),
-            accel_x: Some(self.accel_x.into()),
-            accel_y: Some(self.accel_y.into()),
-            accel_z: Some(self.accel_z.into()),
-        }
+        time: Some(time_elapsed),
+        gyro_x: Some(item.gyro_1.into()),
+        gyro_y: Some(item.gyro_2.into()),
+        gyro_z: Some(item.gyro_3.into()),
+        accel_x: Some(item.accel_x.into()),
+        accel_y: Some(item.accel_y.into()),
+        accel_z: Some(item.accel_z.into()),
     }
 }
 
