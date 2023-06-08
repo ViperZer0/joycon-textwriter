@@ -8,8 +8,10 @@ use self::joycon_data_set::{JoyconDataSet};
 pub mod models;
 pub mod schema;
 pub mod joycon_data_set;
+pub mod joycon_data_point;
 pub mod fraction;
 pub mod average;
+pub mod recorder;
 
 pub struct DatabaseConnection { }
 
