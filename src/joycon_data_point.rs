@@ -1,6 +1,7 @@
 use crate::average::Average;
 use crate::models::JoyconData;
 use joycon_rs::joycon::input_report_mode::standard_full_mode::AxisData;
+use std::fmt;
 
 #[derive(Default, Debug)]
 pub struct JoyconDataPoint {
@@ -11,6 +12,21 @@ pub struct JoyconDataPoint {
     pub accel_x: Option<f32>,
     pub accel_y: Option<f32>,
     pub accel_z: Option<f32>,
+}
+
+impl fmt::Display for JoyconDataPoint
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
+        write!(f, "{}\t", self.time.map_or("-".to_owned(), |x| x.to_string()))?;
+        write!(f, "{}\t", self.gyro_x.map_or("-".to_owned(), |x| x.to_string()))?;
+        write!(f, "{}\t", self.gyro_y.map_or("-".to_owned(), |x| x.to_string()))?;
+        write!(f, "{}\t", self.gyro_z.map_or("-".to_owned(), |x| x.to_string()))?;
+        write!(f, "{}\t", self.accel_x.map_or("-".to_owned(), |x| x.to_string()))?;
+        write!(f, "{}\t", self.accel_y.map_or("-".to_owned(), |x| x.to_string()))?;
+        write!(f, "{}\t", self.accel_z.map_or("-".to_owned(), |x| x.to_string()))?;
+        Ok(())
+    }
 }
 
 impl JoyconDataPoint

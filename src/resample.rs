@@ -1,59 +1,55 @@
 use crate::fraction::Fraction;
-use std::fmt::{Display, Formatter, Result};
+use crate::average::Average;
+use std::fmt;
 
-pub struct Resample {}
-
-#[derive(Error, Debug)]
-enum ResampleError
+#[derive(Debug)]
+pub enum ResampleError
 {
     ZeroSampleSize,
     UpsampleError,
 }
 
-impl Display for ResampleError
+impl fmt::Display for ResampleError
 {
-    fn fmt(&self, f: &mut Formatter) -> Result
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
     {
-        match(self)
+        match self
         {
-            ZeroSampleSize => write!(f, "Sample size of 0 was specified."),
-            UpsampleError => write!(f, "Number of samples specified greater than source number of samples. Upsampling is currently not supported, only downsampling."),
+            ResampleError::ZeroSampleSize => write!(f, "Sample size of 0 was specified."),
+            ResampleError::UpsampleError => write!(f, "Number of samples specified greater than source number of samples. Upsampling is currently not supported, only downsampling."),
         }
     }
 }
 
     
-impl Resample
+// Only returns a new vector if we can actually downsample the dataset.
+pub fn resample<T: Average>(dataset: &[T], num_samples: usize) -> Result<Vec<T>, ResampleError>
 {
-    // Only returns a new vector if we can actually downsample the dataset.
-    pub fn resample<T: Average>(dataset: &[T], num_samples: usize) -> Result<Vec<T>, ResampleError>
+    if num_samples == 0
     {
-        if num_samples == 0
-        {
-            return Err(ResampleError::ZeroSampleSize);
-        }
-        else if dataset.len() <= num_samples
-        {
-            return Err(ResampleError::UpsampleError);
-        }
-        else
-        {
-            let ratio = Self::ratio(dataset.len(), num_samples);
-            let size = 1 + ratio.numerator - ratio.denom;
-            let new_vec = dataset.windows(size).map(|x| T::average(&x)).collect();
-            return Ok(new_vec);
-        }
+        return Err(ResampleError::ZeroSampleSize);
     }
+    else if dataset.len() <= num_samples
+    {
+        return Err(ResampleError::UpsampleError);
+    }
+    else
+    {
+        let ratio = ratio(dataset.len(), num_samples);
+        let size = 1 + ratio.numerator - ratio.denom;
+        let new_vec = dataset.windows(size).map(|x| T::average(&x)).collect();
+        return Ok(new_vec);
+    }
+}
 
-    fn ratio(size_1: usize, size_2: usize) -> Fraction<usize>
-    {
-        let mut f = Fraction {
-            numerator: size_1,
-            denom: size_2,
-        };
-        f.reduce_mut();
-        return f;
-    }
+fn ratio(size_1: usize, size_2: usize) -> Fraction<usize>
+{
+    let mut f = Fraction {
+        numerator: size_1,
+        denom: size_2,
+    };
+    f.reduce_mut();
+    return f;
 }
 
 #[cfg(test)]
@@ -130,7 +126,7 @@ mod tests
         let vec = vec!([1.0, 2.0]);
         let result = Resample::resample(vec, 3);
         assert!(result.is_err());
-        match result.unwrap_err();
+        match result.unwrap_err()
         {
             UpsampleError => assert!(true),
             _ => assert!(false),

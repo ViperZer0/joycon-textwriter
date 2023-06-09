@@ -12,6 +12,7 @@ pub mod joycon_data_point;
 pub mod fraction;
 pub mod average;
 pub mod recorder;
+pub mod resample;
 
 pub struct DatabaseConnection { }
 
