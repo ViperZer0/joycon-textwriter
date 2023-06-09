@@ -1,8 +1,7 @@
-use crate::recorder::Recorder;
+use joycon_typer::recorder::Recorder;
 
-#[tokio::main]
-async fn main()
+fn main()
 {
-    let recording = Recorder::record_sample(0).await;
-    println!("{:?}", recording.expect("This better not throw an error!!!");
+    let recording = Recorder::new().get_sample();
+    println!("{:?}", recording.expect("This better not throw an error!!!"));
 }

@@ -1,18 +1,24 @@
 use std::time::Instant;
-use std::thread::Thread;
+use std::thread::JoinHandle;
 use crate::joycon_data_set::JoyconDataSet;
 use crate::joycon_data_point::{JoyconDataPoint, axisdata_to_joycon_data_point};
 use joycon_rs::prelude::*;
 use joycon_rs::joycon::input_report_mode::StandardInputReport;
 use joycon_rs::joycon::input_report_mode::standard_full_mode::IMUData;
 use std::sync::mpsc::{Sender, Receiver};
+use std::io;
 
 pub struct Recorder {
-    sender_thread: Thread,
-    receiver_thread: Thread,
+    tx_thread: Option<JoinHandle<()>>,
+    rx_thread: Option<JoinHandle<Result<JoyconDataSet, RecorderError>>>
 }
 
+#[derive(Debug)]
 pub enum RecorderError {
+    ReceiverThreadUninitialized,
+    TransmitThreadUninitialized,
+    TransmitThreadError,
+    ReceiverError(crossbeam_channel::RecvError),
     JoyConError(JoyConError),
 }
 
@@ -24,17 +30,87 @@ impl From<JoyConError> for RecorderError
     }
 }
 
+impl From<crossbeam_channel::RecvError> for RecorderError
+{
+    fn from(item: crossbeam_channel::RecvError) -> RecorderError
+    {
+        RecorderError::ReceiverError(item)
+    }
+}
+
 impl Recorder
 {
-    async fn set_up_joycon(&mut self) -> (Sender<JoyConResult<StandardInputReport<IMUData>>>, Receiver<JoyConResult<StandardInputReport<IMUData>>>)
+    pub fn new() -> Self
     {
-        
+        Self
+        {
+            tx_thread: None,
+            rx_thread: None,
+        }
     }
 
-    async fn record_sample(symbol: &str, training_num: i32, rx: Receiver<JoyConResult<StandardInputReport<IMUData>>>) -> Result<JoyconDataSet, RecorderError>
+    pub fn get_sample(&mut self) -> Result<JoyconDataSet, RecorderError>
+    {
+        self.set_up_joycon();
+        let tx_result = self.tx_thread.take();
+        if let Some(tx_thread) = tx_result
+        {
+            if tx_thread.join().is_err()
+            {
+                return Err(RecorderError::TransmitThreadError);
+            }
+        }
+        else
+        {
+            return Err(RecorderError::TransmitThreadUninitialized);
+        }
+
+        let result = self.rx_thread.take();
+        if result.is_some()
+        {
+            return result.unwrap().join().unwrap();
+        }
+        else
+        {
+            return Err(RecorderError::ReceiverThreadUninitialized);
+        }
+    }
+
+    // Get the symbol and the training number from the user.
+    fn get_symbol() -> String
+    {
+        let mut symbol = String::new();
+        loop
+        {
+            println!("Enter the symbol to train: ");
+            if io::stdin().read_line(&mut symbol).is_err()
+            {
+                println!("Something went wrong! Try again!");
+                continue;
+            }
+            return symbol;
+        }
+    }
+
+    fn get_training_num() -> i32
+    {
+        return 0;
+    }
+
+    fn set_up_joycon(&mut self) -> Sender<JoyConResult<StandardInputReport<IMUData>>>
+    {
+        let symbol = Self::get_symbol();
+        let training_num = Self::get_training_num();
+        let (tx, rx) = std::sync::mpsc::channel();
+        self.rx_thread = Some(std::thread::spawn(move || Self::record_sample(&symbol, training_num, rx)));
+        self.set_up_transmit_thread(tx.clone());
+        return tx;
+    }
+
+    fn record_sample(symbol: &str, training_num: i32, rx: Receiver<JoyConResult<StandardInputReport<IMUData>>>) -> Result<JoyconDataSet, RecorderError>
     {
         println!("Press the ZR button to start recording.");
-        // Reciever error.
+        // Receiver error.
         while let Ok(message) = rx.recv()
         {
             if message.is_err()
@@ -76,5 +152,29 @@ impl Recorder
             training_num: training_num,
             data_points: output_data,
         })
+    }
+
+    fn set_up_transmit_thread(&mut self, tx: Sender<JoyConResult<StandardInputReport<IMUData>>>) -> Result<(),RecorderError>
+    {
+        let manager = JoyConManager::get_instance();
+        
+        let devices = {
+            let lock = manager.lock();
+            match lock {
+                Ok(manager) => manager.new_devices(),
+                Err(_) => unreachable!(),
+            }
+        };
+
+        // instead of iter, we only want one device.
+        let device = devices.recv()?;
+        let driver = SimpleJoyConDriver::new(&device)?;
+        let joycon = StandardFullMode::new(driver)?;
+        self.tx_thread = Some(std::thread::spawn(move || {
+            loop {
+                tx.send(joycon.read_input_report()).unwrap();
+            }
+        }));
+        Ok(())
     }
 }
