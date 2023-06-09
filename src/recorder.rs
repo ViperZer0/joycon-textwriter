@@ -80,14 +80,13 @@ impl Recorder
         return 0;
     }
 
-    fn set_up_joycon(&mut self) -> Sender<JoyConResult<StandardInputReport<IMUData>>>
+    fn set_up_joycon(&mut self)
     {
         let (tx, rx) = std::sync::mpsc::channel();
-        self.set_up_transmit_thread(tx.clone()).expect("Something went wrong in setting up the transmit thread!");
+        std::thread::spawn(move || Self::set_up_transmit_thread(tx).expect("Something went wrong in setting up the transmit thread!"));
         let symbol = Self::get_symbol();
         let training_num = Self::get_training_num();
         self.rx_thread = Some(std::thread::spawn(move || Self::record_sample(&symbol, training_num, rx)));
-        return tx;
     }
 
     fn record_sample(symbol: &str, training_num: i32, rx: Receiver<JoyConResult<StandardInputReport<IMUData>>>) -> Result<JoyconDataSet, RecorderError>
@@ -96,7 +95,6 @@ impl Recorder
         // Receiver error.
         while let Ok(message) = rx.recv()
         {
-            println!("{:?}", message);
             if message.is_err()
             {
                 return Err(message.unwrap_err().into());
@@ -138,7 +136,7 @@ impl Recorder
         })
     }
 
-    fn set_up_transmit_thread(&mut self, tx: Sender<JoyConResult<StandardInputReport<IMUData>>>) -> Result<(),RecorderError>
+    fn set_up_transmit_thread(tx: Sender<JoyConResult<StandardInputReport<IMUData>>>) -> Result<(),RecorderError>
     {
         let manager = JoyConManager::get_instance();
 
