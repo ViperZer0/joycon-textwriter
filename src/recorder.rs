@@ -2,14 +2,16 @@ use std::time::Instant;
 use std::thread::JoinHandle;
 use crate::joycon_data_set::JoyconDataSet;
 use crate::joycon_data_point::{JoyconDataPoint, axisdata_to_joycon_data_point};
+use crate::database_connection::OpenDatabaseConnection;
 use joycon_rs::prelude::*;
 use joycon_rs::joycon::input_report_mode::StandardInputReport;
 use joycon_rs::joycon::input_report_mode::standard_full_mode::IMUData;
 use std::sync::mpsc::{Sender, Receiver};
 use std::io;
-
 pub struct Recorder {
-    rx_thread: Option<JoinHandle<Result<JoyconDataSet, RecorderError>>>
+    rx_thread: Option<JoinHandle<Result<JoyconDataSet, RecorderError>>>,
+    db_conn: OpenDatabaseConnection
+
 }
 
 #[derive(Debug)]
@@ -75,9 +77,9 @@ impl Recorder
         }
     }
 
-    fn get_training_num() -> i32
+    fn get_training_num(symbol: &str) -> i32
     {
-        return 0;
+        db_conn.
     }
 
     fn set_up_joycon(&mut self)

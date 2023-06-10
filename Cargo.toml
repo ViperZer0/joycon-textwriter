@@ -9,6 +9,7 @@ edition = "2021"
 joycon-rs = { git = "https://github.com/KaiseiYokoyama/joycon-rs.git", branch = "dependabot/cargo/hidapi-2.2" }
 tokio = { version = "1" , features = ["full"] }
 sqlx = { version = "0.6.3", features = [ "runtime-tokio-rustls", "mysql" ] }
-tensorflow = "0.20.0"
+#tensorflow = "0.20.0"
+#tch = "0.13.0"
 diesel = { version = "2.0.0", features = ["sqlite"] }
 dotenvy = "0.15"

@@ -1,6 +1,4 @@
-extern crate tensorflow;
-
-use joycon_typer::DatabaseConnection;
+use joycon_typer::database_connection::DatabaseConnection;
 use joycon_typer::models::JoyconData;
 
 fn main() {
