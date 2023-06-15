@@ -9,6 +9,7 @@ pub mod average;
 pub mod recorder;
 pub mod resample;
 pub mod database_connection;
+pub mod controller;
 
 /*
 pub struct JoyconRecorder
