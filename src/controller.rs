@@ -48,7 +48,7 @@ impl Controller
                 println!("Something went wrong! Try again!");
                 continue;
             }
-            return symbol;
+            return symbol.trim().into()
         }
     }
 

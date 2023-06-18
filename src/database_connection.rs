@@ -58,6 +58,21 @@ impl OpenDatabaseConnection{
             .select(diesel::dsl::max(training_num))
             .first(&mut self.conn);
     }
+
+    pub fn get_all_symbol_types(&mut self) -> QueryResult<Vec<String>>
+    {
+        use crate::schema::joycon_data::dsl::*;
+        return joycon_data
+            .select(symbol)
+            .distinct()
+            .load::<String>(&mut self.conn);
+    }
+
+    pub fn clear_all_data(&mut self) -> QueryResult<usize>
+    {
+        use crate::schema::joycon_data::dsl::*;
+        diesel::delete(joycon_data).execute(&mut self.conn)
+    }
 }
 
 
