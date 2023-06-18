@@ -7,7 +7,7 @@ use joycon_rs::joycon::input_report_mode::standard_full_mode::IMUData;
 use std::sync::mpsc::{Sender, Receiver};
 pub struct Recorder {
     rx_thread: Option<JoinHandle<Result<Vec<JoyconDataPoint>, RecorderError>>>,
-    tx_threads: Option<Vec<JoinHandle<()>>>
+    tx_thread: Option<JoinHandle<()>>
 }
 
 #[derive(Debug)]
@@ -40,7 +40,7 @@ impl Recorder
         Self
         {
             rx_thread: None,
-            tx_threads: None,
+            tx_thread: None,
         }
     }
 
@@ -51,20 +51,23 @@ impl Recorder
         if result.is_some()
         {
             let result = result.unwrap().join();
-            // Close down tx_threads.
-            let tx_threads = self.tx_threads.take();
-            if tx_threads.is_some()
+            // Close down tx_thread.
+            let tx_thread = self.tx_thread.take();
+            if tx_thread.is_some()
             {
-                for thread in tx_threads.unwrap()
-                {
-                    thread.join().unwrap();
-                }
-                return result.unwrap();
+                tx_thread.unwrap().join();
             }
             else
             {
                 return Err(RecorderError::TransmitThreadUninitialized);
             }
+
+            // Check result
+            if result.is_err()
+            {
+                panic!("Something went wrong joining the recieve thread");
+            }
+            return result.unwrap();
         }
         else
         {
@@ -126,7 +129,7 @@ impl Recorder
     {
         let manager = JoyConManager::get_instance();
 
-        let devices = {
+        let mut devices = {
             let lock = manager.lock();
             match lock {
                 Ok(manager) => manager.managed_devices(),
@@ -134,25 +137,25 @@ impl Recorder
             }
         };
 
-        devices.iter()
-            .flat_map(|device| SimpleJoyConDriver::new(&device))
-            .try_for_each::<_, JoyConResult<()>>(|driver| {
-                println!("Device found!");
-                let joycon = StandardFullMode::new(driver)?;
-                let tx = tx.clone();
-                
-                self.tx_threads.get_or_insert(Vec::new()).push(std::thread::spawn(move || {
-                    loop {
-                        let result = tx.send(joycon.read_input_report());
-                        // Reciever has closed.
-                        if result.is_err()
-                        {
-                            break;
-                        }
-                    }
-                }));
-                Ok(())
-            })?;
+        
+
+        // We just want one device. We'll use pop here.
+        let device = devices.pop();
+        if device.is_none()
+        {
+            panic!("No JoyConDevices found!");
+        }
+        let device = SimpleJoyConDriver::new(&device.unwrap())?;
+        let device = StandardFullMode::new(device)?;
+        self.tx_thread = Some(std::thread::spawn(move || {
+            loop {
+                let result = tx.send(device.read_input_report());
+                if result.is_err()
+                {
+                    break;
+                }
+            }
+        }));
         Ok(())
-    }
+   }
 }
